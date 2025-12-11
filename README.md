@@ -3,9 +3,9 @@
 
 - 如果你找到了bug/有任何建议/想要加入共创，欢迎[加入hackmd团队](https://hackmd.io/join/rJlWH1_f-l)
 - 我们的博客将采取 [rainel.site](https://rainel.site) & hackmd & github 三线更新的方式
-- rainel.site 用于保留原始版本，每次写完博客后我们会先上传一个初始版本到 rainel.site
-- hackmd 用于在实验过程中及时修改 bug & 人多力量大。大家遇到bug可以随手即使修改，互通有无，互相帮助。因此，它会是更新**最及时**的。
-- github 用于长期保存/和软院仓库连接，我会不定时地把hackmd上的内容更新到github上面。
+  - rainel.site 用于保留原始版本，每次写完博客后我们会先上传一个初始版本到 rainel.site
+  - hackmd 用于在实验过程中及时修改 bug & 人多力量大。大家遇到bug可以随手即使修改，互通有无，互相帮助。因此，它会是更新**最及时**的。
+  - github 用于长期保存/和软院仓库连接，我会不定时地把hackmd上的内容更新到github上面。
 
 关于hackmd的一些tips：
 1. 似乎需要挂梯子访问
