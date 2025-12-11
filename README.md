@@ -1,7 +1,7 @@
 # BUAA_jwangsy_blog
 软院计网实验博客，由2321共创。发起者为rainel和Tengpaz。
 
-- 如果你找到了bug/有任何建议/想要加入共创，欢迎[查看hackmd团队首页](https://hackmd.io/join/rJlWH1_f-l)，你可以在里面看到所有帖子，登录之后即可参与共创
+- 如果你找到了bug/有任何建议/想要加入共创，欢迎[查看hackmd团队首页](https://hackmd.io/@jwsy)，你可以在里面看到所有帖子，登录之后即可参与共创
 - 我们的博客将采取 [rainel.site](https://rainel.site) & hackmd & github 三线更新的方式
   - rainel.site 用于保留原始版本，每次写完博客后我们会先上传一个初始版本到 rainel.site
   - hackmd 用于在实验过程中及时修改 bug & 人多力量大。大家遇到bug可以随手即使修改，互通有无，互相帮助。因此，它会是更新**最及时**的。
