@@ -1,0 +1,304 @@
+---
+title: 【计网实验】lab7-应用层实验
+date: 2025-12-22 23:21:50
+tags: 学习经验
+categories:
+- [学习经验, 计网实验]
+---
+
+2. DNS协议分析实验（建议考虑使用chrome而非IE浏览器）
+3. HTTP协议分析实验（建议考虑使用chrome而非IE浏览器）
+4. FTP协议分析实验（IE浏览器能用）
+5. DHCP协议分析实验
+
+本次实验内容不多，但务必小心破旧的IE浏览器刺客
+
+## 0 mooc & 实验报告
+
+### 0.0 mooc
+
+![Pasted image 20251222231416](https://hackmd.io/_uploads/HkMAl1Pm-x.png)
+
+
+### 0.1 实验报告
+
+2. DNS: 1-6
+3. HTTP: 7-10
+4. FTP: 13-14
+5. DHCP: 15-16
+
+##### 1 
+![Pasted image 20251222230926](https://hackmd.io/_uploads/rJnbW1DQbl.png)
+
+##### 2
+在客户机向本地DNS服务器发送的递归查询中，如果本地DNS服务器没有缓存相关的记录，它会代客户端向其他DNS服务器发起查询，直到找到答案，然后将这个答案返回给客户端。这种方式对客户端来说很方便，因为它只需要发送一个请求，然后等待最终的答案。
+
+在本地DNS向Internet发送到迭代查询中，如果Internet服务器没有缓存记录，它会告诉本地DNS下一个应查询的DNS服务器的地址，然后本地DNS向新的DNS服务器发出请求，这个过程会一直重复，直到找到答案。在这种模式下，本地DNS服务器参与了整个查询过程。
+
+在这个过程中，客户端只需要向本地DNS服务器发起一次请求。本地DNS服务器负责处理整个查询过程，确保最终将结果返回给客户端。这种方法减少了客户端的负担，并允许本地DNS服务器有效地管理和分散查询负载。
+
+##### 3
+![Pasted image 20251222231000](https://hackmd.io/_uploads/rkpWbJvmWl.png)
+
+##### 4
+(1)．DNS客户端如何和DNS服务器协商是否使用递归查询？
+
+DNS客户端的查询报文中的Flags字段中，可以找到Recursion desired字段，其表示是否请求使用递归查询，其中1是递归。
+
+DNS服务器的回答报文中的Flags字段中，可以找到Recursion available字段，其表示是否可以使用迭代查询。
+
+(2)．对比DNS请求报文，DNS应答报文中多了那些字段？这些字段传递什么信息？
+
+可以发现其中多了Answers字段，字段中包含的信息是Queries字段中的查询字段中包含的问题的直接答案，如被查询的域名的IP地址或别名。
+
+##### 5
+![Pasted image 20251222231022](https://hackmd.io/_uploads/r1CWZ1Pmbe.png)
+(1).从报文②得知，DNS服务器所请求的根域名服务器IP地址为198.41.0.4。
+
+(2).分析报文③，找出DNS服务器向哪一个顶级域名服务器发出请求报文，并写出它的域名和IP地址   **当前的根域名服务器进行了升级，使其能够在系统中保存大量常见的DNS域名解析结果，从而可以按递归方式直接返回查找到的结果，避免了多级迭代。**         
+
+(3).写出www.buaa.edu.cn的本地授权域名服务器的域名和IP地址：
+
+|                           |                |
+| ------------------------- | -------------- |
+| www.buaa.edu.cn的本地授权域名服务器 | IP地址           |
+| ns1.buaa.edu.cn           | 202.112.128.51 |
+| ns2.buaa.edu.cn           | 202.112.128.50 |
+
+(4). 简述DNS域名解析的过程。
+
+客户机向本地DNS服务器查询 [www.buaa.edu.cn](http://www.buaa.edu.cn)
+本地DNS服务器向根域名服务器查询，根域名服务器返回查询 dns.cn 的顶级域名服务器
+本地DNS服务器向 dns.cn 查询，顶级域名服务器返回查询 dns.edu.cn
+本地DNS服务器向 dns.edu.cn 查询，返回查询 NS1 buaa.edu.cn
+本地DNS服务器向 NS1 buaa.edu.cn 查询，返回查询的 IP 地址
+本地DNS服务器向主机返回查询结果
+
+##### 6 
+DNS查询的大多数情况主要使用UDP协议，特别是标准的查询请求和响应。UDP是一种无连接的协议，这意味着它不需要像TCP那样进行连接建立和终止的过程，使得通信更快。且UDP的头部开销较小，适用于小数据包的快速交换，如DNS查询通常情况下。UDP适用于简单的请求-响应通信模式，这与DNS查询的基本模式相符。
+
+##### 13
+![Pasted image 20251222231138](https://hackmd.io/_uploads/rJ6bbkvQWx.png)
+
+##### 14
+FTP协议的工作过程：
+
+1. FTP服务器准备：
+
+第一步是FTP服务器准备就绪。
+
+2. 用户输入用户名和密码：
+
+第二步用户输入用户名和密码，包括与服务器进行控制连接的建立。这一过程中，用户的身份验证也是重要的一部分。
+
+3. 服务器回应和用户登陆：
+
+第三步用户收到服务器的回应，如果用户名和密码验证成功，服务器允许用户登录进行数据操作。这一过程包括控制连接的建立和命令传输。
+
+4. 用户操作和数据传输：
+
+在用户登录后，可以执行各种FTP命令进行数据操作，如上传文件、下载文件、列出目录等。数据的传输是通过建立数据连接来实现的，可以是主动模式或被动模式。
+
+5. 用户退出和FTP服务关闭：
+
+最后，用户可以执行退出命令，关闭控制连接，同时服务器也关闭与该用户相关的数据连接。这一过程意味着用户会话的结束。
+
+## 2 DNS 协议分析实验
+
+##### 1 组网
+
+![Pasted image 20251222214214](https://hackmd.io/_uploads/SyJT-kD7Ze.png)
+
+##### 2 配置 PCA, PCB
+**PCA**:
+- IP：10.0.0.11
+- 子网掩码：255.255.255.0
+- 默认网关：10.0.0.1
+- 首选 DNS 服务器：10.0.0.11
+**PCB**：
+- IP：10.0.0.12
+- 子网掩码：255.255.255.0
+- 默认网关：10.0.0.1
+- 首选 DNS 服务器：10.0.0.11
+
+##### 3 配置 IE 浏览器
+
+1. PCB 启动 IE 浏览器
+2. 工具
+	1. Internet 选项
+		1. 常规页
+			1. 主页-使用空白页
+			2. Internet 临时文件-删除 Cookies & 删除文件
+			3. 历史记录-清除历史记录
+			4. 打开 cmd
+				`ipconfig/flushdns`
+			5. 应用
+			6. 确定
+
+##### 4 配置路由器
+PCC 上
+```
+sys
+sysname r1
+inter ge 0/1
+ip add 192.168.5.x 24
+inter ge 0/0
+ip add 10.0.0.1 24
+quit
+ip route-static 0.0.0.0 0.0.0.0 192.168.5.x
+acl basic 2001
+rule permit source 10.0.0.0 0.0.0.255
+rule deny source any
+quit
+nat address-group 1 
+address 192.168.5.x address 192.168.5.y
+int ge 0/1
+nat outbound 2001 address-group 1
+```
+
+测试：
+- PCB ping 10.0.0.11 能 ping 通
+- PCB ping 202.112.128.51 能 ping 通
+
+##### 5 Simple DNS Plus
+
+- PCA 上打开 Simple DNS Plus
+- Tools - Options 
+	- 勾选 General - Start up 的 `Run as Windows Service` 和 `Show in Tray Bar`
+	- 勾选 DNS Requests - Listen for DNS requests orc 的 `The IP addresses checked below` 中的 `10.0.0.11`（不勾选 `127.0.0.1` ）
+- OK - 确定
+- PCA 上再次打开 Simple DNS Plus
+- Tools - Clean DNS Cache
+
+##### 6 打开 PCA PCB 的 Wireshark
+
+- 过滤 `udp.port==53`
+- PCB 上用浏览器访问一个网站，如 `www.buaa.edu.cn`
+- 分析报文
+	**截图**：
+	1. PCA 的报文们
+	2. PCB 的报文们
+	3. 右下角的地球电脑（Simple DNS Plus） - Tools - DNS Cache Snapshot - root/net/root-servers，Data 与 PCA 第二条报文的 Destination 相同的那一页
+
+##### 7
+cmd 上 `nslookup -type=NS buaa.edu.cn`，**截图**
+![Pasted image 20251222224345](https://hackmd.io/_uploads/BkgabyDQbx.png)
+
+## 3 HTTP 协议分析实验
+
+实验内容：通过NAT地址转换，使不同分组的计算机能同时上网，并截获HTTP报文，分析HTTP报文首部格式、学习HTTP工作过程。
+
+### 实验步骤
+
+步骤1 在上一节实验基础上（不同重新连接组网），将所有计算机的DNS服务器配置为202.112.128.51
+
+配置DNS的方法：与配置主机IP的方式类似，在IP地址项的下方有DNS相关配置（”使用下面的DNS服务器地址“），将首选DNS服务器修改为需要的地址即可
+
+所有计算机停止运行Simple DNS Plus软件
+
+停止方法：右键右下角任务栏内的地球图标（在小电脑附近），点击最下方的`Shutdown Simple DNS Plus`即可
+
+步骤2 在计算机上打开Wireshark软件，开始截获报文
+
+步骤3 先清理DNS缓存
+
+在命令行中
+
+```
+ipconfig/flushdns
+```
+
+然后打开IE浏览器访问www.buaa.edu.cn页面，具体：打开网页，浏览一下，关闭网页
+
+步骤4 停止Wireshark的报文截获，结果保存为"http-学号"（考虑截图）
+
+步骤5 过滤信息输入`ip.addr==202.112.120.119 and http`（其中202.112.120.119请视情况修改，后同），过滤得到报文，选择一条HTTP请求报文（GET），展开协议树（截图），选择一条HTTP应答报文，同样展开信息（截图）
+
+接着输入过滤信息`udp.port==53`进行过滤，过滤得到的报文是有关DNS解析过程的报文
+
+（截图）
+
+输入过滤信息`ip.addr==202.112.120.119 and tcp.flags.syn==1`，定位得到TCP建立连接的报文位置，观察`[SYN]`对应的报文序号，然后将过滤信息改为``ip.addr==202.112.120.119`找到之前建立连接的报文，对TCP**建立连接**过程中的3条报文进行（截图）
+
+将过滤信息改为`ip.addr==202.112.120.119 and tcp.flags.fin==1`，得到TCP释放连接的几条报文
+
+（截图）
+
+将过滤信息改为`ip.addr==202.112.120.119`，页面划到第一条报文所在位置
+
+（截图，尽可能多一些，至少包括到[TCP segment of a reassembled PDU]的报文段）
+
+页面划到TCP释放连接的报文所在位置
+
+（截图，尽可能多一些，填写实验报告需要定位文件传输的报文序号）
+
+## 4 FTP 协议分析实验
+
+##### 1 组网
+![Pasted image 20251222224821](https://hackmd.io/_uploads/H15SZkDQbe.png)
+
+##### 2 配置
+
+- PCA
+	- IP:192.168.1.22
+	- 子网掩码：255.255.255.0
+- PCB
+	- IP:192.168.1.21
+	- 子网掩码：255.255.255.0
+
+##### 3 启动 ftp 服务器
+
+1. PCA 上 开始-所有程序-Programs-3Cdaemon-3Cdaemon
+2. 显示下面内容说明 ftp 服务器已启动
+	![Pasted image 20251222225151](https://hackmd.io/_uploads/rJaHWywmWg.png)
+3. 进行配置（“实际上我们不做配置也可以哈”）
+	1. File - Configure selected service
+	2. 文件根目录改到常用软件
+
+##### 4 抓包
+
+1. PCB 上打开 Wireshark，过滤 tcp or http
+2. IE 浏览器上访问 `ftp://192.168.1.22/`
+3. 配置
+	1. 工具-Internet 选项-高级
+	2. 勾选 “使用被动 FTP……”（在最下面偏上的位置）
+	3. 应用-确定
+4. 关闭 IE 浏览器，重新打开，访问 `ftp://192.168.1.22/`
+5. 暂停抓包
+6. **截图**，至少包含实验报告中的几个报文
+
+## 5 DHCP 协议分析实验
+
+实验内容：实验主要分析DHCP报文格式和DHCP工作过程。
+
+### 实验步骤
+
+![截屏2025-12-23 10.13.20](https://hackmd.io/_uploads/SyxvCGFPmbx.png)
+
+步骤1 按照课本图5-14连接组网，将所有主机设置为“自动获得IP地址”
+
+设置方法：与配置IP地址位置相同，单选框选中“自动获得IP地址”即可
+
+步骤2 在主机上打开Wireshark，设置报文过滤条件为`udp.port==67 or udp.port==68`
+
+然后等待一会，当出现DHCP报文后，找到一个服务器发出的报文（比如源地址类似：192.168.20.1），点击这个报文，查看下面信息，其中Ethernet II协议右侧的Src字段的值中括号内的部分对应服务器Mac地址，记住这个地址
+
+将原本过滤条件改为`(udp.port==67 or udp.port==68) and (eth.addr==<服务器Mac地址>)`
+
+接着打开命令行，执行
+
+```
+ipconfig /all
+```
+
+输出信息最下方有“本地连接”一栏，在其中找到Mac地址即**本机Mac地址**，记住该地址
+
+将过滤条件进一步改为`(udp.port==67 or udp.port==68) and (eth.addr==<服务器Mac地址> or eth.addr==<本机Mac地址>)`
+
+步骤3 “修复”本地连接
+
+方法：双击右下角电脑图标，进入”本地连接 状态“页面，点击“支持”标签页，下面存在“修复”按钮，点击修复即可；或者右键点击右下角电脑图标，会出现“修复（<u>P</u>）”的选项，点击。
+
+步骤4 停止Wireshark，报文保存为“dhcp-学号”
+
+步骤5 打开报文内容，与之前同样的过滤信息，然后一次找到 第一条本机发出的Discover报文 Offer报文 Request报文 ACK报文，截图包含到这四个报文行的**完整内容**（用于填实验报告）
