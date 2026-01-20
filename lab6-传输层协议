@@ -1,0 +1,444 @@
+---
+title: 【计网实验】lab6-传输层实验
+date: 2025-12-14 00:03:50
+tags: 学习经验
+categories:
+- [学习经验, 计网实验]
+---
+
+1. TCP基础实验
+2. TCP滑动窗口机制和窗口探查机制分析
+3. TCP慢启动、拥塞避免算法及拥塞处理实验
+4. UDP实验
+
+tips：TCP 实验约 **Linux** 系统，UDP 实验约 **winxp** 系统
+
+## 0 Linux 相关 & mooc & 实验报告
+
+### 0.1 Linux 相关
+
+##### 1 Linux 用户名&密码
+用户名：root
+密码：network
+
+##### 2 Linux 配 IP
+
+以PCB为例，配置接收端IP地址：
+1. 右键点击如图的网络连接图标，选择 `Edit Connection`；
+    ![02](https://hackmd.io/_uploads/Bypxjbif-g.png)
+	![03](https://hackmd.io/_uploads/SypWiZszZg.png)
+    
+2. 先查看是否有可用的配置好的ip地址，
+	如果没有，则点击add，如下图配置（选择 `IPv4 Settings`, `Method` 为 `Manual`, 点击 `Add`，输入 IP 地址、掩码、网管），点击apply，关闭编辑网络连接。
+	注意：配网关和子网掩码的之前或之后，要在旁边空白的地方点一下，看看是否配置成功了。或者配完敲一下回车。不要急于点确定。否则，容易出现配的网关等总是变成0.0.0.0
+	![04](https://hackmd.io/_uploads/BkNQo-ifWg.png)
+3. 鼠标左键点击网络连接图标，先点击 `disconnect` 断开网络连接，再用鼠标选择receiver eth0（你刚刚给那个 IP 的命名），出现下面界面即可。还可以 `ipconfig` 验证 ip 是否生效
+	![05](https://hackmd.io/_uploads/Hkf8oZoGbl.png)
+
+
+##### 3 Linux配路由器或交换机
+
+打开命令行窗口，输入minicom，敲回车，等待几秒钟即可
+![01](https://hackmd.io/_uploads/Skq8iZozZe.png)
+
+### 0.2 mooc
+![06](https://hackmd.io/_uploads/rkrdoZjMbe.png)
+![07](https://hackmd.io/_uploads/S1iOsZsfbl.png)
+
+### 0.3 实验报告
+
+本次实验报告共 11 题
+1. TCP 基础实验：T1-T5
+2. TCP 滑动窗口机制和窗口探查机制分析:T6-T7
+3. TCP 慢启动、拥塞避免算法及拥塞处理实验:T8-T10
+4. UDP 实验:T11
+
+##### T1
+根据2.6中步骤3回答：TCP的连接和建立采用的是：**三次握手**方式，PCA是**主动打开**，PCB是**被动打开**。先点击发送再点击接收，会出现什么问题？为什么？
+**如果先点击发送再点击连接，则会失败，提示 IO错误。因为这类似于C/S模式，如果被动连接server没有启动，不接受连接，则主动连接的client不能连接上。必须先打开被动连接一方。**
+
+##### T2 参考
+![08](https://hackmd.io/_uploads/HkcKo-ofZl.png)
+
+发送方初始序号：209418378
+![09(1)](https://hackmd.io/_uploads/BkHc3-sz-x.png)
+![10](https://hackmd.io/_uploads/Byv5hWizbl.png)
+![11](https://hackmd.io/_uploads/HkFchbsz-g.png)
+
+##### T3 
+TCP连接建立时，其报文首部与其它TCP报文不同，有一个“Option”字段，它的作用是什么，值为多少？结合IEEE802.3协议规定的以太网最大帧长度分析此数据是怎样得出的。
+**它的作用是给出最大报文段长度MSS，大小是发送方和接收方的MSS的较小值。这个值将在数据传输时被使用到，在本实验中，该值为1460字节。**
+**IEEE802.3协议规定的以太网最大帧长度为1500字节，减去20字节的IP首部和20字节的TCP首部，结果即为1460字节。**
+包含Option字段的报文见下：
+![12](https://hackmd.io/_uploads/HkDj2WizWg.png)
+
+
+##### T4 参考
+![13](https://hackmd.io/_uploads/SJk2hZsGWl.png)
+![14](https://hackmd.io/_uploads/H1zn3-oGZx.png)
+
+
+##### T5 参考
+![15](https://hackmd.io/_uploads/B1462-jf-g.png)
+![16](https://hackmd.io/_uploads/rJwpnZifWg.png)
+![17](https://hackmd.io/_uploads/SyF6nZoGZx.png)
+![18](https://hackmd.io/_uploads/HJm-pZozZg.png)
+![19](https://hackmd.io/_uploads/S18Z6WjMbl.png)
+![20](https://hackmd.io/_uploads/H1dbTbsz-g.png)
+![21](https://hackmd.io/_uploads/S19b6-oMbl.png)
+
+
+
+##### T6
+##### T7
+##### T8 参考
+
+###### （1）
+ssthresh = 2147483647，cwnd = 3。ssthresh的初始值很大，而cwnd的初始值很小，这样，TCP可以在开始时快速增加发送窗口，直到达到ssthresh，然后进入拥塞避免阶段，逐渐增加发送窗口。
+
+**RFC5681慢启动初始值的规定如下：**
+If SMSS > 2190 bytes:
+IW = 2 * SMSS bytes and MUST NOT be more than 2 segments
+If (SMSS > 1095 bytes) and (SMSS <= 2190 bytes) :
+IW = 3 * SMSS bytes and MUST NOT be more than 3 segments
+If (SMSS <= 1095 bytes)
+IW = 4 * SMSS bytes and MUST NOT be more than 4 segments
+
+计算过程如下表：
+
+|         | rcv_wnd                                                  | snd_wnd_left | snd_wnd_pointer | snd_wnd_left+cwnd和<br>snd_wnd_left+rcv_wnd | snd_wnd_point- left |
+| ------- | -------------------------------------------------------- | ------------ | --------------- | ------------------------------------------ | ------------------- |
+| 发送方发出报文 | 5840                                                     | 978938082    | 978939482       | 978942462 978943922                        | 1400                |
+| 发送窗口右边沿 | Min(snd_wnd_left+cwnd, snd_wnd_left+rcv_wnd) = 978942462 |              |                 |                                            |                     |
+
+![22](https://hackmd.io/_uploads/HJhRh-jMbx.png)
+
+
+###### （2）
+ssthresh保持不变，cwnd每收到一个确认报文就加1.
+因为snd_cwnd\*1460< ssthresh，处于慢启动阶段，每收到一个ACK，snd_cwnd至多增加1个MSS的数值。
+发送的报文相关信息截图如下，可以发现符合这一规律。
+![23](https://hackmd.io/_uploads/H17kT-jMbx.png)
+
+
+###### (3)
+第60号报文时ssthresh变化为10和cwnd变化为1，因为路由器上的端口被关闭。
+之后ssthresh不变，而cwnd依次加1.依次处于慢启动、拥塞避免阶段直到发送完毕。根据截图可见符合这一规律。
+在发送文件为100k大小的实验中，截获的报文信息如下：
+![24](https://hackmd.io/_uploads/S13Na-iMbg.png)
+![25](https://hackmd.io/_uploads/ryCE6WsMZx.png)
+
+
+##### T9 参考
+
+###### （1）
+**参考 1**：
+
+|        | 第一个重传时间差 | 第二个重传时间差 | 第三个重传时间差 |
+| ------ | -------- | -------- | -------- |
+| 10Mbps | 0.275358 | 0.537274 | 0.123423 |
+| 80Kbps | 4.235234 | 9.257412 | 21.26568 |
+
+计算超时重传时间时，采用了修正的Karn算法，同种速率下，重传时间满足：新的重传时间=2×旧的重传时间，表现为重传时间差成倍增长；转发速率越大，重传时间越短。
+示例截图如下：
+![26](https://hackmd.io/_uploads/HkBBabiG-e.png)
+![27](https://hackmd.io/_uploads/SJDSaZjMbe.png)
+
+
+**参考 2**
+
+|        | 第一个重传时间差 | 第二个重传时间差 | 第三个重传时间差 |
+| ------ | -------- | -------- | -------- |
+| 10Mbps | 0.2053s  | 0.4128s  | 0.8243s  |
+| 80Kbps | 3.2225s  | 6.4449s  | 12.8898s |
+
+![28](https://hackmd.io/_uploads/B1gPabsMWl.png)
+![29](https://hackmd.io/_uploads/SJlgD6-oGbx.png)
+![30](https://hackmd.io/_uploads/BkZD6WiGWl.png)
+
+
+##### T10
+
+```
+[R1]interface g0/0
+[R1-GigabitEthernet0/0]undo qos lr outbound
+[R1-GigabitEthernet0/0]interface g0/1
+[R1-GigabitEthernet0/1]undo qos lr outbound
+```
+
+## 1 TCP 基础实验
+
+##### 步骤 1 组网，配置 IP、路由器、交换机
+1. 组网
+	![32](https://hackmd.io/_uploads/HJJd6Wifbl.png)
+
+2. 配置 IP
+	1. PCA：点击“网络连接图标” -> 点击 TCP_send -> 检查`ifconfig` 192.168.1.2
+	2. PCB：点击“网络连接图标” -> 点击 TCP_Receiver -> 检查 `ipconfig` 192.168.2.2 -> `ping 192.168.1.2`
+3. 配置路由器：PCC上
+```
+minicom
+sys
+sysn R1
+interface e 0/0
+ip add 192.168.1.1 24
+quit
+interface e 0/1
+ip add 192.168.2.1 24
+quit
+```
+
+4. 配置交换机：PCA 上
+```
+minicom
+sys
+sysn S1
+vlan 2
+port e 1/0/1 e 1/0/2
+quit
+vlan 3
+port e 1/0/23 e 1/0/24
+quit
+```
+
+##### 步骤 2、步骤 3
+
+1. PCB 打开 Wireshark，选择 `eth0` 进行抓包，过滤 tcp 报文
+2. PCB 上双击运行桌面的 `tcptest` 程序， `Run`， 选择“作为接收端”， ` 休眠时间 ` 为 0, ` 计数器阈值 ` 为 0，点击 ` 接收 `
+
+3. PCA 打开 Wireshark，选择 `eth0` 进行抓包，过滤 tcp 报文
+4. PCA 上双击运行桌面的 `tcplog_init` 程序进行初始化， `Run`
+5. PCA 上双击运行桌面的 `tcptest` 程序， `Run`，选择“作为发送端”， `要发送的文件` 为 `???300k.txt`，点击 `发送`
+
+6. 保存 PCA、PCB报文为 `send1-学号` 和 `receive1-学号` ，**截图**
+> [!note]+
+> 看到 TCP seq number 是 0 或者 1 的，这些都是 wireshark 软件处理过的 relative sequence number。而不是初始的 32 位随机产生的 sequence number。可以通过设置 wireshark 来解决：如图，设置一下 wireshark，edit—>preference 选 tcp，将 relative sequence number 勾选掉。
+> ![33](https://hackmd.io/_uploads/H1kK6-ifZe.png)
+
+7. PCA 上双击运行桌面的 `tcplog_read` 程序， `Run`。双击桌面 `network` 文件夹， `root`， `TCPLog`，根据文件属性的日期找到我们的数据，右键，点击最上面的那一个选项来打开文件，**截图**
+
+##### 步骤 4 5 6
+分析报文，填写报告（参考本博客第 0.3 节）
+
+## 2 TCP 滑动窗口机制和窗口探查机制分析
+
+前置知识
+
+如何配置主机IP?
+
+进入主机，点击任务栏中的网络状态图标，如果没有TCP Send或者TCP Receive的设置项，则需要自行添加。
+
+鼠标右击相同图标，选择编辑网络，输入相应的项目名称，选择IPv4协议，然后输入熟悉的IP地址、掩码、网关等信息，之后点击`Apply`即可添加项目，后面需要启动项目则重新左击相同图标，选择对应项即可。
+
+如何配置路由器/交换机？
+
+进入对应主机，打开命令行，输入`minicom`后Enter，多按几次回车进入配置界面。
+
+如何发送TCP信息？
+
+在接收端，打开TcpTest程序，点击作为接收端，然后输入相应的配置信息。
+
+在发送端，发送文件，需要先进行init初始化，即运行桌面上一个初始化脚本，然后再与接收端同样操作。
+
+如何连接组网？
+
+与winxp一样，在PCA上有对应程序。
+
+---
+
+实验内容：通过TcpTest程序参数的选择和路由器端口速率的设置，制造TCP传输的不同环境，截取TCP报文，分析滑动窗口机制，以及坚持定时器的作用。
+
+具体内容如下：
+
+1. 滑动窗口机制和窗口侦查机制分析。
+
+### 实验步骤（Linux）
+
+步骤1 按照课本图4-10进行组网，确保组网正确和路由器、PC接口IP地址配置正确。
+
+步骤2 所有PC进入Linux系统，用户名为`root`，密码为`network`，打开所有计算机上的Wireshark脚本。（注意对报文进行TCP过滤）
+
+步骤3 PCA即发送端在Linux下命令行中运行脚本初始化TCPConnection实时监控模块。
+
+```
+root@qjl-desktop:~# cd /root/TCPLog
+root@qjl-desktop:~# ./init.sh
+```
+
+步骤4 所有PC在Linux下打开一个新的“终端命令行”，使用命令行方式启动TcpTest程序：
+
+```
+root@qjl-desktop:~# cd /root/TCPTest/
+root@qjl-desktop:~# /root/jre/bin/java TcpTest
+```
+
+然后PCA作为发送端，选择一个300KB的文件准备发送
+
+参数如下
+
+- 要发送的文件：/root/snd300k.txt
+- 目的IP地址：192.168.2.2
+- 目的端口：1234
+- 发送缓存：60000
+- 滞留时间：500
+- 每次写入套接字的字节数：1400
+- Nagle算法：enable
+- 信息反馈：空
+
+PCB作为接收端，配置如下
+
+- 要写入的文件：/root/rcv.txt
+- 指定端口：1234
+- 休眠时间：0
+- 计数器阈值：0
+- 接收缓存：100000
+- 滞留时间：500
+- 每次读出套接字的字节数：1400
+- Nagle算法：enable
+- 信息反馈：空
+
+先点接收，再点发送，文件传输完成后，将截获的报文命名为"sed2-学号"和"receive2-学号"，保存到本地磁盘/root/DATA/目录下。
+
+步骤5 在PCA的终端命令行中运行脚本来读取"TCPConnection实时监控模块"：
+
+```
+root@qjl-desktop:~# cd /root/TCPLog
+root@qjl-desktop:~# ./read.sh
+```
+
+将本地磁盘/root/TCPLog/目录下的"tcpsnd-wnddata.txt"和"tcprtodata.txt"文件分别复制到/root/DATA/目录下并改名为"send2-学号-tcpsndwnddata.txt"和"send2-学号-tcprtodata.txt"。
+
+步骤6 分析之前保存的报文和文件信息（截图）（实验报告）
+
+步骤7 分析报文文件，找到窗口侦查开始的报文（截图）
+
+## 3 TCP 慢启动、拥塞避免算法及拥塞处理实验
+
+##### 步骤 1
+路由器 R1 上配置端口转发速率为 10Mbps
+```
+interface e0/0
+qos lr outbound cir 10000 #存疑，参见下面note
+interface e0/1
+qos lr outbound cir 10000
+```
+
+> [!note]
+> 如图所示，设置接口转发速率10Mbps 需使用？在线帮助。
+> 注意按照设备上的提示做，**注意一下转发速率的单位**，不同设备单位可能不同。
+> > ![31](https://hackmd.io/_uploads/HJtFT-sfWl.png)
+
+
+
+##### 步骤 2
+1. PCB 打开 Wireshark，选择 `eth0` 进行抓包，过滤 tcp 报文
+2. PCA 打开 Wireshark，选择 `eth0` 进行抓包，过滤 tcp 报文
+
+##### 步骤 3
+1. PCB 上双击运行桌面的 `tcptest` 程序， `Run`， 选择“作为接收端”， ` 休眠时间 ` 为 0, ` 计数器阈值 ` 为 0，点击 ` 接收 `
+2. （不清楚用不用做）PCA 上双击运行桌面的 `tcplog_init` 程序进行初始化， `Run`
+3. PCA 上双击运行桌面的 `tcptest` 程序， `Run`，选择“作为发送端”， `要发送的文件` 为 `/root/snd6m.txt`，点击 `发送`
+4. PCA 点击 `发送` 后**立即**在 minicom 内 `shutdown` 路由器的一个端口。
+	`[R1-GigabitEthernet0/0]shutdown`
+	**由于文件发送时间较快，务必与现在 minicom 上输入命令 shutdown，PCA 发送后立即回车，一定要保证 shutdown 一个路由器端口后，程序还在传输数据（或许可以在 TCP 协议测试软件内看到“系统 IO 错误”）。如果 shutdown 一个路由器端口前程序已经传输完数据，重做此步骤!!!**
+5. 10s 后，将此端口 undo shutdown
+	`[R1-GigabitEthernet0/0]undo shutdown`
+6. **存报文** `send3-学号`, `receive3-学号`
+
+##### 步骤 4
+1. 下面两个方法二选一，看哪个能行得通走哪个
+	1. PCA 上双击运行桌面的 `tcplog_read` 程序， `Run`。双击桌面 `network` 文件夹， `root`， `TCPLog`，根据文件属性的日期找到我们的数据，右键，点击最上面的那一个选项来打开文件，**截图**
+	2. 终端命令行中运行脚本来读取“TCPConnection 实时监控模块”已记录的此 TCP 连接期间的相关参数数据
+```
+root@qjl-desktop:~# cd /root/TCPLog
+root@qjl-desktop:~/TCPLog# ./read.sh
+```
+此脚本将读取的 TCP 连接相关参数数据保存在本地磁盘/root/TCPLog/目录下的“tcpsnd-wnddata.txt"和“tcprtodata.txt”文件中，将其复制到/root/DATA/目录下并改名为“send3-学号-tcpsndwnddata.txt"和“send3-学号-tcprtodata.txt”。
+
+##### 步骤 5
+更改路由器上的端口转发速率为 80Kbps
+```
+interface e0/0
+qos lr outbound cir 80
+interface e0/1
+qos lr outbound cir 80
+```
+
+> [!note]
+> 如图所示，设置接口转发速率 10Mbps 需使用？在线帮助。
+> 注意按照设备上的提示做，**注意一下转发速率的单位**，不同设备单位可能不同。
+> ![31](https://hackmd.io/_uploads/HJtFT-sfWl.png)
+
+##### 步骤 6
+1. PCB 打开 Wireshark，选择 `eth0` 进行抓包，过滤 tcp 报文
+2. PCA 打开 Wireshark，选择 `eth0` 进行抓包，过滤 tcp 报文
+
+##### 步骤 7
+1. PCB 上双击运行桌面的 `tcptest` 程序， `Run`， 选择“作为接收端”， ` 休眠时间 ` 为 0, ` 计数器阈值 ` 为 0，点击 ` 接收 `
+2. （不清楚用不用做）PCA 上双击运行桌面的 `tcplog_init` 程序进行初始化， `Run`
+3. PCA 上双击运行桌面的 `tcptest` 程序， `Run`，选择“作为发送端”， `要发送的文件` 为 `/root/snd100k.txt`，点击 `发送`
+4. PCA 点击 `发送` 后**立即**在 minicom 内 `shutdown` 路由器的一个端口。
+	`[R1-GigabitEthernet0/0]shutdown`
+	此文件发送较慢，可从容配置，但依旧要 shutdown 后仍在传输局
+5. 40s 后，将此端口 undo shutdown
+	`[R1-GigabitEthernet0/0]undo shutdown`
+6. **存报文** `send4-学号`, `receive4-学号`
+
+##### 步骤 8
+1. 下面两个方法二选一，看哪个能行得通走哪个
+	1. PCA 上双击运行桌面的 `tcplog_read` 程序， `Run`。双击桌面 `network` 文件夹， `root`， `TCPLog`，根据文件属性的日期找到我们的数据，右键，点击最上面的那一个选项来打开文件，**截图**
+	2. 终端命令行中运行脚本来读取“TCPConnection 实时监控模块”已记录的此 TCP 连接期间的相关参数数据
+```
+root@qjl-desktop:~# cd /root/TCPLog
+root@qjl-desktop:~/TCPLog# ./read.sh
+```
+此脚本将读取的 TCP 连接相关参数数据保存在本地磁盘/root/TCPLog/目录下的“tcpsnd-wnddata.txt"和“tcprtodata.txt”文件中，将其复制到/root/DATA/目录下并改名为“send4-学号-tcpsndwnddata.txt"和“send4-学号-tcprtodata.txt”。
+
+##### 步骤 9
+分析文件“send3-学号”(或“receive3-学号”)和“send3-学号-tepsndwnddata.txt”(或send4-学号"和“send4-学号-tcpsndwnddata.txt”),体会慢启动、拥塞避免及拥塞处理机制，**填报告**
+
+##### 步骤 10
+分析文件“send3-学号”“send3-学号-teprtodata.txt”和“send4-学号”号-teprtodata.txt”,体会超时与重传机制。
+
+## 4 UDP 实验
+
+实验内容：使用模拟通信程序UDPTest发送消息数据，并使用Wireshark软件截获报文，分析UDP的报文格式。并进而了解和理解UDP运行机理。
+
+### 实验步骤
+
+步骤1 按照课本图4-20进行连线组网，注意清空交换机的所有配置
+
+配置好各主机IP
+
+PCA
+
+192.168.1.22
+
+255.255.255.0
+
+PCB
+
+192.168.1.21
+
+255.255.255.0
+
+步骤2 在PCA和PCB上都启动UDPTest程序，首先设置好监听的UDP端口并启动监听。
+
+步骤3 打开PCA PCB上的Wireshark软件，开始截获报文。
+
+步骤4 在PCA和PCB上的UDPTest程序的发送设置部分，互设对方的IP地址和UDP监听端口（1030）。互发消息进行通信。
+
+步骤5 互发消息一段时间后，将交换机S1和S2之间的网线拔掉，此时PCA再继续往PCB发消息。
+
+步骤6 PCA继续往PCB发消息一段时间后，将交换机S1和S2之间的网线重新插上。PCA和PCB继续互发消息一段时间。
+
+步骤7 操作PCA和PCB上的Wireshark软件，分析截获报文，将报文保存为"UDP-学号"
+
+选中第一个UDP报文，展开字段后（截图）
+
+---
+
+其余均为实验报告内容
+
+## 5 讨论区
+1. 1.0版本完工
