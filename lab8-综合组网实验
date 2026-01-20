@@ -1,0 +1,389 @@
+---
+title: 【计网实验】lab8-综合组网实验
+date: 2025-12-29 22:21:50
+tags: 学习经验
+categories:
+- [学习经验, 计网实验]
+---
+
+其实这次只有一个大实验，祝大家速速做完早早下班，尤其是31号晚上/元旦假期要做实验的w
+以及\~\~完结撒花  ♡｡ﾟ.(\*♡´◡\` 人´◡\` ♡\*)ﾟ♡ °・
+
+1) 网络规划与拓扑结构设计
+2) 网络地址规划与设备编号
+3) VLAN划分与配置
+4) 网络路由的设计
+5) NAT地址转换与访问控制
+
+## 0 实验报告
+
+##### 1 
+```
+[S2] stp enable
+[S2] Interface bridge-aggregation 1
+[S2-Bridge-Aggregation1] Link-aggregation mode dynamic
+[S2-Bridge-Aggregation1] Int e 1/0/1
+[S2-GigabitEthernet1/0/1] Port link-aggregation group 1
+[S2-Bridge-Aggregation1] Int e 1/0/3
+[S2-GigabitEthernet1/0/3] Port link-aggregation group 1
+[S2-GigabitEthernet1/0/3] Int bridge-aggregation 1
+[S2-Bridge-Aggregation1] Port link-type trunk
+[S2-Bridge-Aggregation1] Port trunk permit vlan all
+```
+
+##### 2
+```
+核心交换机S1：
+Interface:192.168.201.1   
+DR:192.168.201.1  
+BDR:192.168.201.3
+Interface:192.168.3.1  
+DR:192.168.3.2
+BDR:192.168.3.1
+ 
+核心路由器R1：
+Interface:192.168.201.3  
+DR:192.168.201.1  
+BDR:192.168.201.3
+ 
+核心路由器R2：
+Interface:192.168.201.4  
+DR:192.168.201.1  
+BDR:192.168.201.3
+```
+
+##### 3
+```
+配置地址池和访问控制列表：
+[R1]nat address-group 1
+[R1-address-group-1laddress 192.168.5.170 192.168.5.174
+[R1-GigabitEthernet0/1]nat outbound 2001 address-group 1
+[R1]acl basic 2001
+[R1-acl-ipu4-basic-2001]rule 0 deny source 10.3.1.0 0.0.0.255
+[R1-acl-ipu4-basic-2001]rule 1 deny source 10.3.2.0 0.0.0.255
+[R1-acl-ipu4-basic-2001]rule 2 permit source 10.0.0.0 0.255.255.255
+[R1-acl-ipu4-basic-2001]rule 3 deny source any
+ 
+[R2]nat address-group 1
+[R2-address-group-1laddress 192.168.5.170 192.168.5.174
+[R2-GigabitEthernet0/1]nat outbound 2001 address-group 1
+[R2]acl basic 2001
+[R2-acl-ipu4-basic-2001]rule 0 deny source 10.3.1.0 0.0.0.255
+[R2-acl-ipu4-basic-2001]rule 1 deny source 10.3.2.0 0.0.0.255
+[R2-acl-ipu4-basic-2001]rule 2 permit source 10.0.0.0 0.255.255.255
+[R2-acl-ipu4-basic-2001]rule 3 deny source any
+```
+
+##### 4
+①简化网络管理：通过为每个设备配置专用的网络管理地址，网络管理员可以轻松地识别和访问特定设备。这样，他们可以更方便地执行网络配置、监控和故障排除任务，而无需在网络中搜索设备。
+②提高安全性：通过使用专用的网络管理地址，可以实现更好的安全性。网络管理通常涉及对设备进行更高级别的访问和控制，因此将管理流量隔离到专用地址可以减少攻击者的机会，使网络管理操作更加安全。
+③减少网络拥塞：当设备共享相同的地址空间时，可能会发生地址冲突和网络拥塞的情况。通过为每个设备分配专用的管理地址，可以避免这些问题，并确保网络管理流量能够有效地流动，而不会受到地址冲突或拥塞的干扰。
+④简化网络故障排除：当网络出现故障时，通过具有专用的网络管理地址，管理员可以轻松地远程访问设备并进行故障排除。这样可以节省时间和精力，提高故障排除的效率。
+
+## 写在前面
+
+整个实验流程需要注意一下各组所分配的私有实验室地址和每组预约的设备所允许使用的地址池
+
+本组对应的私有实验室地址为602 603 10.6.2.0/24 10.6.3.0/24
+
+不同组情况不同，具体需要考虑修改Vlan划分中的地址段，以及对于PCA PCB的IP地址的配置，PCA与PCB分别代表两个实验室中的计算机，ospf配置等等
+
+本组对应的地址池为192.168.5.165-169
+
+需要对于实验过程中使用的地址进行合理修改
+
+切勿直接照抄
+
+## 1 网络规划与拓扑结构设计
+
+组网图设计如下
+
+![截屏2025-12-30 09.53.17](https://hackmd.io/_uploads/HyxD62xVWg.png)
+
+具体连接端口与配置如下
+
+![截屏2025-12-30 09.54.25](https://hackmd.io/_uploads/ByzO63eNWl.png)
+
+
+## 2 网络地址规划与设备编号
+
+##### 1 取消路由器和交换机的默认配置
+综合组网实验在清空重启网络设备和提交实验组网后，有可能会出现IP地址冲突报错，以防万一，先取消路由器和交换机的默认配置
+1. 两台路由器的E0/0接口出厂设置配置了IP地址192.168.1.1冲突了。
+	解决办法：在连线组网软件上断开一根与E0/0接口相连的连线，再`undo ip address`。
+2. 交换机的出厂设置创建了三层接口interface vlan-interface 1，并配置了dhcp自动获取地址，因为S2与上网线相连，S1与S2相连且配置了trunk和permit vlan all。有可能使不同组的路由器通过交换机连接在了一个局域网中，产生了地址冲突。
+	解决办法：在连线组网软件上断开与外网相连的连线，然后，在两台交换机的系统视图配置：`undo interface vlan-interface 1`
+
+##### 2 配置
+
+配 PCA，PCB 参考：
+![Pasted image 20251229215716](https://hackmd.io/_uploads/SJj4AWxVWe.png)
+
+```bash
+# ------------------- R1地址配置（匹配7.2“R1用地址池第1个地址+前2个地址池”）-------------------
+# 1. 可上网接口（E0/1）：192.168.5.200（本组地址池第1个地址）
+[R1] int e0/1
+[R1-Ethernet0/1] ip address 192.168.5.165 24
+[R1-Ethernet0/1] quit
+# 2. 与核心交换机互联接口（E0/0）：192.168.201.3（7.2规划的设备互联网段）
+[R1] int e0/0
+[R1-Ethernet0/0] ip address 192.168.201.3 24
+[R1-Ethernet0/0] quit
+# 3. NAT地址池：192.168.5.200-201（7.2规划的“R1地址池为前2个地址”）
+[R1] nat address-group 1
+[R1-nat-address-group-1] address 192.168.5.165 192.168.5.166
+[R1-nat-address-group-1] quit
+
+# ------------------- R2地址配置（匹配7.2“R2用地址池第3个地址+后3个地址池”）-------------------
+# 1. 可上网接口（E0/1）：192.168.5.202（本组地址池第3个地址）
+[R2] int e0/1
+[R2-Ethernet0/1] ip address 192.168.5.167 24
+[R2-Ethernet0/1] quit
+# 2. 与核心交换机互联接口（E0/0）：192.168.201.4（7.2规划的设备互联网段）
+[R2] int e0/0
+[R2-Ethernet0/0] ip address 192.168.201.4 24
+[R2-Ethernet0/0] quit
+# 3. NAT地址池：192.168.5.202-204（7.2规划的“R2地址池为后3个地址”）
+[R2] nat address-group 1
+[R2-nat-address-group-1] address 192.168.5.167 192.168.5.169
+[R2-nat-address-group-1] quit
+```
+
+## 3 VLAN划分与配置
+
+S1
+
+```
+<H3C>sys
+[H3C]sysname
+[S1]vlan 100
+[S1-vlan100]port GigabitEthernet 1/0/23 to GigabitEthernet 1/0/24
+[S1-vlan100]quit
+[S1]interface vlan 100
+[S1-vlan-interface100]ip address 192.168.201.1 24
+[S1-vlan-interface100]quit
+[S1]vlan 3
+[S1-vlan3]interface vlan 3
+[S1-vlan-interface3]ip address 192.168.3.1 24
+[S1-vlan-interface3]interface ge 1/0/1
+[S1-GigabitEthernet1/0/1]port link-type trunk
+[S1-GigabitEthernet1/0/1]port trunk permit vlan 3 100
+```
+
+S2
+
+```
+[S2]vlan 3
+[S2-vlan3]port ge 1/0/1
+[S2-vlan3]interface vlan 3
+[S2-Vlan-interface3]ip address 192.168.3.2 24
+[S2-Vlan-interface3]quit
+[S2]interface ge 1/0/1
+[S2-GigabitEthernet1/0/1]port link-type trunk
+[S2-GigabitEthernet1/0/1]quit
+[S2]vlan 602
+[S2-vlan602]port ge 1/0/23
+[S2-vlan602]interface vlan 602
+[S2-Vlan-interface602]ip address 10.6.2.1 24
+[S2-Vlan-interface602]quit
+[S2]vlan 603
+[S2-vlan603]port ge 1/0/24
+[S2-vlan603]interface vlan 603
+[S2-Vlan-interface603]ip address 10.6.3.1 24
+[S2-Vlan-interface603]quit
+[S2]interface ge 1/0/1
+[S2-GigabitEthernet1/0/1]port trunk permit vlan 602 603 3
+[S2-GigabitEthernet1/0/1]quit
+```
+
+配置PIM-DM协议
+
+S1
+
+```
+[S1]multicast routing
+[S1]interface vlan 3
+[S1-vlan-interface3]pim dm
+```
+
+S2
+
+```
+[S2]multicast routing
+[S2]interface vlan 602
+[S2-vlan-interface602]pim dm
+[S2-vlan-interface602]quit
+[S2]interface vlan 603
+[S2-vlan-interface603]pim dm
+```
+
+## 4 网络路由的设计
+
+### 4.1 步骤
+1. 链路备份：STP 协议 + 链路聚合（S1/S2）
+```
+# ------------------- S1 的链路聚合与 STP 配置 -------------------
+# 1. 启用 STP（防止链路环路）
+[S1] stp global enable
+# 2. 创建链路聚合组 1（动态聚合模式）
+[S1] Interface bridge-aggregation 1
+[S1-Bridge-Aggregation1] Link-aggregation mode dynamic
+# 3. 将物理端口 E1/0/1、E1/0/3 划入聚合组
+[S1] int e 1/0/1
+[S1-Ethernet1/0/1] Port link-aggregation group 1
+[S1-Ethernet1/0/1] quit
+[S1] int e 1/0/3
+[S1-Ethernet1/0/3] Port link-aggregation group 1
+[S1-Ethernet1/0/3] quit
+# 4. 配置聚合组为 Trunk 口（允许所有 VLAN）
+[S1] int bridge-aggregation 1
+[S1-Bridge-Aggregation1] Port link-type trunk
+[S1-Bridge-Aggregation1] Port trunk permit vlan all
+[S1-Bridge-Aggregation1] quit
+
+# ------------------- S2 的链路聚合与 STP 配置（与 S1 一致） -------------------
+[S2] stp global enable
+[S2] Interface bridge-aggregation 1
+[S2-Bridge-Aggregation1] Link-aggregation mode dynamic
+[S2] int e 1/0/1
+[S2-Ethernet1/0/1] Port link-aggregation group 1
+[S2-Ethernet1/0/1] quit
+[S2] int e 1/0/3
+[S2-Ethernet1/0/3] Port link-aggregation group 1
+[S2-Ethernet1/0/3] quit
+[S2] int bridge-aggregation 1
+[S2-Bridge-Aggregation1] Port link-type trunk
+[S2-Bridge-Aggregation1] Port trunk permit vlan all
+[S2-Bridge-Aggregation1] quit
+```
+
+2. 路由备份：默认路由 + OSPF 成本配置（R1/R2）
+```
+# ------------------- R1：配置默认路由+OSPF -------------------
+# 1. 去外网的默认静态路由（下一跳为网络中心网关 192.168.5.1，7.4 指定）
+[R1] ip route-static 0.0.0.0 0.0.0.0 192.168.5.1
+# 2. OSPF
+[R1] ospf
+[R1-ospf-1] area 0  # 加入区域 0（骨干区域）
+# 宣告与 S1 互联网段（192.168.201.0/24）、与 S2 互联网段（192.168.3.0/24）、实验室私有网段（10.6.2.0/24、10.6.3.0/24）
+[R1-ospf-1-area-0.0.0.0] network 192.168.201.0 0.0.0.255
+[R1-ospf-1-area-0.0.0.0] network 192.168.3.0 0.0.0.255
+[R1-ospf-1-area-0.0.0.0] network 10.6.2.0 0.0.0.255
+[R1-ospf-1-area-0.0.0.0] network 10.6.3.0 0.0.0.255
+[R1-ospf-1-area-0.0.0.0] quit
+[R1-ospf-1] default-route-advertise cost 100
+[R1-ospf-1] quit
+
+# ------------------- R2：配置默认路由+OSPF -------------------
+# 1. 同 R1 的默认静态路由
+[R2] ip route-static 0.0.0.0 0.0.0.0 192.168.5.1
+# 2. OSPF 引入默认路由，cost=200（优先级低，R1 故障时启用）
+[R2] ospf
+[R2-ospf-1] area 0
+[R2-ospf-1-area-0.0.0.0] network 192.168.201.0 0.0.0.255
+[R2-ospf-1-area-0.0.0.0] network 192.168.3.0 0.0.0.255
+[R2-ospf-1-area-0.0.0.0] network 10.6.2.0 0.0.0.255
+[R2-ospf-1-area-0.0.0.0] network 10.6.3.0 0.0.0.255
+[R2-ospf-1-area-0.0.0.0] quit
+[R2-ospf-1] default-route-advertise cost 200
+[R2-ospf-1] quit
+```
+3. 核心交换机（S1）与汇聚交换机（S2）的 OSPF 配置
+```
+# ------------------- S1 的 OSPF 配置 -------------------
+[S1] ospf
+[S1-ospf-1] area 0
+# 宣告与 R1/R2 互联网段（192.168.201.0/24）、与 S2 互联网段（192.168.3.0/24）、实验室私有网段
+[S1-ospf-1-area-0.0.0.0] network 192.168.201.0 0.0.0.255
+[S1-ospf-1-area-0.0.0.0] network 192.168.3.0 0.0.0.255
+[S1-ospf-1-area-0.0.0.0] network 10.6.2.0 0.0.0.255
+[S1-ospf-1-area-0.0.0.0] network 10.6.3.0 0.0.0.255
+[S1-ospf-1-area-0.0.0.0] quit
+# 引入默认路由（无需单独配置，通过 R1/R2 的 OSPF 学习）
+[S1-ospf-1] default-route-advertise
+[S1-ospf-1] quit
+
+# ------------------- S2 的 OSPF 配置 -------------------
+[S2] ospf
+[S2-ospf-1] area 0
+# 宣告与 S1 互联网段（192.168.3.0/24）、实验室私有网段（10.6.2.0/24、10.6.3.0/24）
+[S2-ospf-1-area-0.0.0.0] network 192.168.201.0 0.0.0.255
+[S2-ospf-1-area-0.0.0.0] network 192.168.3.0 0.0.0.255
+[S2-ospf-1-area-0.0.0.0] network 10.6.2.0 0.0.0.255
+[S2-ospf-1-area-0.0.0.0] network 10.6.3.0 0.0.0.255
+[S2-ospf-1-area-0.0.0.0] quit
+[S2-ospf-1] default-route-advertise
+[S2-ospf-1] quit
+```
+
+### 4.2 验证
+```
+# PCA,PCB上cmd ping
+ping 192.168.3.1
+ping 192.168.201.3
+ping 192.168.201.4
+```
+
+## 5 NAT地址转换与访问控制
+
+acl配置
+
+R1
+
+```
+[R1]acl basic 2001
+[R1-acl-ipu4-basic-2001]rule permit source 192.168.3.0 0.0.0.255
+[R1-acl-ipu4-basic-2001]rule permit source 192.168.201.0 0.0.0.255
+[R1-acl-ipu4-basic-2001]rule permit source 10.6.2.0 0.0.0.255
+[R1-acl-ipu4-basic-2001]rule permit source 10.6.3.0 0.0.0.255
+[R1-acl-ipu4-basic-2001]rule deny source any
+[R1-acl-ipu4-basic-2001]quit
+[R1]interface ge 0/1
+[R1-GigabitEthernet0/1]nat outbound 2001 address-group 1
+[R1-GigabitEthernet0/1]quit
+```
+
+R2
+
+```
+[R2]acl basic 2001
+[R2-acl-ipu4-basic-2001]rule permit source 192.168.3.0 0.0.0.255
+[R2-acl-ipu4-basic-2001]rule permit source 192.168.201.0 0.0.0.255
+[R2-acl-ipu4-basic-2001]rule permit source 10.6.2.0 0.0.0.255
+[R2-acl-ipu4-basic-2001]rule permit source 10.6.3.0 0.0.0.255
+[R2-acl-ipu4-basic-2001]rule deny source any
+[R2-acl-ipu4-basic-2001]quit
+[R2]interface ge 0/1
+[R2-GigabitEthernet0/1]nat outbound 2001 address-group 1
+[R2-GigabitEthernet0/1]quit
+```
+
+> 补充说明：其实ACL是隐式deny any，这里显示写出只是为了增强可读性和安全性，避免误放行，如果配置正确，可以无需最后补充deny any指令
+
+VRRP配置
+
+R1
+
+```
+[R1]interface ge 0/0
+[R1-GigabitEthernet0/0]vrrp vrid 11 virtual-ip 192.168.201.2
+```
+
+R2
+
+```
+[R2]interface ge 0/0
+[R2-GigabitEthernet0/0]vrrp vrid 11 virtual-ip 192.168.201.2
+[R2-GigabitEthernet0/0]vrrp vrid 11 priority 80
+```
+
+Snmp配置
+
+R1
+
+```
+[R1]snmp-agent community write private
+[R1]snmp-agent community read public
+[R1]snmp-agent trap enable
+[R1]snmp-agent target-host trap address udp-domain 10.6.2.2 params securityname public
+```
